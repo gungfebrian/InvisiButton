@@ -55,12 +55,13 @@ REARM_SAMPLES = 8               # ...for 10 ms
 # 100-250 ms. Hysteresis re-arms on the signal actually decaying instead, so a
 # fast-decaying knock re-arms in 60 ms while a long ring still cannot retrigger.
 GYRO_AXES = (0, 1)              # roll and pitch only — see _peak_dev
-CONFIRM = 64                    # 80 ms of lookahead. The sigma trigger fires on
+CONFIRM = 88                    # 110 ms of lookahead. The sigma trigger fires on
                                 # the leading edge, before the peak exists; the
                                 # amplitude test must run on the windowed peak or
                                 # it rejects real knocks for not having arrived
-                                # yet. The app pays this as latency — 80 ms
-                                # against the 150 ms budget in the Phase 1 gate.
+                                # yet. This matches DetectorConfig.confirmSamples
+                                # in the shipping Swift pipeline and includes its
+                                # full 100 ms direction-classification window.
 WARMUP = 1600                   # 2 s before the estimator is trusted
 FREEZE_SIGMA = 6.0              # the estimator freezes on ANY notable activity,
                                 # not on the decision threshold — so the noise
