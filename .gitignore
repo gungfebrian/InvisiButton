@@ -1,0 +1,14 @@
+spu-probe
+spu-seize-test
+*.o
+.DS_Store
+build/
+data/
+tools/bin/
+spu-wake
+spu-diag
+spu-eventsystem*
+!*.swift
+
+# Project docs (local only)
+*.md
