@@ -54,13 +54,17 @@ enum HardwareSupport {
     case noSPUDriver
     case noAccelerometer(found: [Int])
 
-    var isUsable: Bool { if case .ok = self { return true }; return false }
+    var isUsable: Bool {
+        if case .ok(let accel, let gyro) = self { return accel && gyro }
+        return false
+    }
 
     var message: String {
         switch self {
         case .ok(_, let gyro):
             return gyro ? "SPU IMU ready — accelerometer and gyroscope."
-                        : "Accelerometer only — gyroscope not found. Direction is unavailable."
+                        : "Accelerometer found, but the gyroscope is missing. "
+                          + "Knock detection is unavailable because both channels are required."
         case .noSPUDriver:
             return """
             No SPU sensor hub on this Mac (\(sysctlString("hw.model")), \
