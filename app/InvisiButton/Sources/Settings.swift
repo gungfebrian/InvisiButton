@@ -545,10 +545,23 @@ struct SettingsView: View {
 
                 Text("Knock bindings").font(.system(size: 14)).bold()
 
+                Toggle("Allow unsafe single-knock actions", isOn: Binding(
+                    get: { bindings.allowSingleKnockActions },
+                    set: { bindings.setAllowSingleKnockActions($0) }))
+                    .toggleStyle(.switch)
+                Text(bindings.allowSingleKnockActions
+                     ? "Single-knock actions are active. Ordinary desk use may trigger them."
+                     : "Single-knock actions are inactive. Use double or triple knocks for actions.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(bindings.allowSingleKnockActions ? .orange : .secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 ForEach(Bindings.allGestures, id: \.self) { g in
                     BindingRow(gesture: g, bindings: bindings,
                                state_singleRate: state.sensitivity == .cautious ? 12
                                                  : state.sensitivity == .balanced ? 42 : 220)
+                    .disabled(g.count == 1 && !bindings.allowSingleKnockActions)
+                    .opacity(g.count == 1 && !bindings.allowSingleKnockActions ? 0.55 : 1)
                     Divider()
                 }
 

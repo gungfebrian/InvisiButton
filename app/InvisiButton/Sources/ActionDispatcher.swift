@@ -182,6 +182,8 @@ struct Gesture: Codable, Equatable, Hashable {
 
 @MainActor
 final class Bindings: ObservableObject {
+    private static let allowSinglesKey = "allowSingleKnockActions"
+
     private static var fileURL: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory,
                                             in: .userDomainMask)[0]
@@ -192,6 +194,15 @@ final class Bindings: ObservableObject {
 
     struct Entry: Codable { var gesture: Gesture; var action: Action }
 
+    /// Single knocks do not meet the product's false-action target. Keep saved
+    /// bindings inactive unless the user deliberately accepts that risk.
+    @Published var allowSingleKnockActions = false
+
+    func setAllowSingleKnockActions(_ allowed: Bool) {
+        allowSingleKnockActions = allowed
+        UserDefaults.standard.set(allowed, forKey: Self.allowSinglesKey)
+    }
+
     func save() {
         let list = map.map { Entry(gesture: $0.key, action: $0.value) }
         guard let d = try? JSONEncoder().encode(list) else { return }
@@ -199,6 +210,7 @@ final class Bindings: ObservableObject {
     }
 
     func load() {
+        allowSingleKnockActions = UserDefaults.standard.bool(forKey: Self.allowSinglesKey)
         guard let d = try? Data(contentsOf: Self.fileURL),
               let list = try? JSONDecoder().decode([Entry].self, from: d) else { return }
         var m: [Gesture: Action] = [:]
@@ -235,6 +247,7 @@ final class Bindings: ObservableObject {
 
     /// Exact match first, then fall back to the area-agnostic binding.
     func action(for g: Gesture) -> Action {
-        map[g] ?? map[Gesture(count: g.count, area: .any)] ?? .none
+        guard g.count != 1 || allowSingleKnockActions else { return .none }
+        return map[g] ?? map[Gesture(count: g.count, area: .any)] ?? .none
     }
 }
