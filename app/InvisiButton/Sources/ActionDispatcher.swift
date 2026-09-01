@@ -142,6 +142,11 @@ enum ActionDispatcher {
 enum Area: String, Codable, CaseIterable, Hashable {
     case any, left, right, front
 
+    /// Areas the direction model can actually classify. `front` remains a
+    /// decoding case so older bindings files still load, but it is not offered
+    /// for new bindings until a three-way model exists.
+    static let bindable: [Area] = [.left, .right]
+
     var label: String {
         switch self {
         case .any:   return "anywhere"
@@ -208,7 +213,7 @@ final class Bindings: ObservableObject {
         for c in 1...3 {
             out.append(Gesture(count: c, area: .any))
             if directionAvailable {
-                for a in Area.allCases where a != .any {
+                for a in Area.bindable {
                     out.append(Gesture(count: c, area: a))
                 }
             }

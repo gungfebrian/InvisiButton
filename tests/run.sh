@@ -11,3 +11,9 @@ swiftc -parse-as-library \
     "$root/tests/test_hardware_support.swift" \
     -o "$test_build/hardware-support-tests"
 "$test_build/hardware-support-tests"
+
+swiftc -parse-as-library \
+    "$root/app/InvisiButton/Sources/ActionDispatcher.swift" \
+    "$root/tests/test_bindings.swift" \
+    -o "$test_build/binding-tests"
+"$test_build/binding-tests"
