@@ -13,20 +13,24 @@ macOS 15+, Apple Silicon MacBooks only.
 Every shipping competitor uses the microphone, collapses the signal to a scalar, and can
 therefore only count knocks: one, two, three. Direction is thrown away at the first step.
 
-InvisiButton keeps the 3-axis vector from both channels, which yields knock *location* (left,
-right, front) from the same sensor, with no mic permission and no orange privacy indicator.
+InvisiButton keeps the 3-axis vector from both channels, which can distinguish knocks to the
+left or right of the laptop after per-desk calibration, with no mic permission and no orange
+privacy indicator.
 
 Direction is measured to be **per-desk calibrated**: it separates strongly within a desk and
-does not transfer across desks. That is a shipped constraint, not a bug. See `DECISIONS.md`
-D-013, D-020, D-024.
+does not transfer across desks. That is a shipped constraint, not a bug.
 
 ## Status
 
-Phase 1 (tech) in progress. Stage 0 closed, Stages 1 through 4 largely done, Stage 5
-(calibration contract) and the Phase 1 exit gate open. Phase 2 (design) has not started.
+Experimental local build. Sensor capture, adaptive knock detection, single/double/triple
+assembly, per-desk left/right calibration, rhythm calibration, profiles, diagnostics, and action
+bindings are implemented.
 
-No accuracy number appears anywhere in this repo until the `tools/detect/evaluate.py` harness
-measures it on real hardware, held out by desk. See `TASKS.md` for the live queue.
+False actions remain the limiting factor. Single-knock actions are disabled by default because
+none of the measured presets meets the target of one false action per hour. Double and triple
+knocks are the intended action gestures. Published detector measurements come from a limited
+local corpus; the raw sessions are intentionally not included in this repository, so treat those
+numbers as development evidence rather than universal performance claims.
 
 ## Build
 
@@ -34,6 +38,7 @@ No Xcode project, no SwiftPM, no third-party dependencies. `swiftc` and system f
 
 ```bash
 ./app/build.sh
+open app/build/InvisiButton.app
 ```
 
 Produces `app/build/InvisiButton.app`, ad-hoc signed so it launches locally. Developer ID
@@ -45,6 +50,12 @@ signing and notarization are T-021, not done yet.
 
 Produces `tools/bin/capture`, the full-rate session recorder that every detection claim is
 measured against.
+
+Run the dependency-free regression suite with:
+
+```bash
+./tests/run.sh
+```
 
 ## The one thing that is easy to get wrong
 
@@ -64,7 +75,7 @@ Then open the HID devices and register input report callbacks as normal. Setting
 `ReportInterval` on the `IOHIDDevice` does nothing. There are no HID feature reports. Root does
 not help; privilege was never the gate.
 
-Reference implementation: `spikes/spu-wake.swift`. Full ruled-out matrix: `RESEARCH.md`.
+Reference implementation: `spikes/spu-wake.swift`.
 
 ## Sensor reference
 
@@ -96,9 +107,14 @@ Verified on MacBook Pro `Mac17,2` (M5, Darwin 25.6.0), 2026-08-30, at euid=501 w
 - **No microphone in v1.** No mic permission, no privacy indicator. That is a feature.
 - **No fabricated accuracy numbers.** Nothing measured, nothing claimed.
 - **Hold out by desk, never by random split.** Random splits leak desk identity.
+- **Single knocks are opt-in.** Saved single-knock actions remain inactive until the user
+  explicitly accepts their measured false-trigger risk.
 
 ## Caveats
 
 Private, undocumented API. Apple can change or remove SPU HID access in any macOS release.
 The app is built to degrade loudly and specifically, naming the machine, the OS, and what was
 looked for, rather than failing silently.
+
+The app is ad-hoc signed for local use. It is not Developer ID signed, notarized, or distributed
+through the Mac App Store.
