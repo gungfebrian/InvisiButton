@@ -513,68 +513,102 @@ struct SettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 6) {
-                ProfileSection(state: state)
-                Divider()
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Sensitivity").font(.system(size: 12)).bold()
-                    Picker("", selection: Binding(
-                        get: { state.sensitivity },
-                        set: { state.sensitivity = $0 })) {
-                        ForEach(Sensitivity.allCases, id: \.self) {
-                            Text($0.label).tag($0)
-                        }
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    Image(systemName: "hand.tap.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.tint)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("InvisiButton").font(.title2.weight(.semibold))
+                        Text("Tune detection, calibrate this desk, and choose actions.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(width: 300)
-                    Text(state.sensitivity.summary)
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Measured over ten minutes of ordinary use on two desks — typing, "
-                         + "trackpad, moving the laptop, setting a cup down.")
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.vertical, 4)
-                Divider()
-
-                CalibrationSection(state: state)
-                Divider()
-
-                Text("Knock bindings").font(.system(size: 14)).bold()
-
-                Toggle("Allow unsafe single-knock actions", isOn: Binding(
-                    get: { bindings.allowSingleKnockActions },
-                    set: { bindings.setAllowSingleKnockActions($0) }))
-                    .toggleStyle(.switch)
-                Text(bindings.allowSingleKnockActions
-                     ? "Single-knock actions are active. Ordinary desk use may trigger them."
-                     : "Single-knock actions are inactive. Use double or triple knocks for actions.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(bindings.allowSingleKnockActions ? .orange : .secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                ForEach(Bindings.allGestures, id: \.self) { g in
-                    BindingRow(gesture: g, bindings: bindings,
-                               state_singleRate: state.sensitivity == .cautious ? 12
-                                                 : state.sensitivity == .balanced ? 42 : 220)
-                    .disabled(g.count == 1 && !bindings.allowSingleKnockActions)
-                    .opacity(g.count == 1 && !bindings.allowSingleKnockActions ? 0.55 : 1)
-                    Divider()
+                    Spacer()
+                    Label(state.running ? "Listening" : "Stopped",
+                          systemImage: state.running ? "waveform.circle.fill" : "pause.circle")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(state.running ? Color.green : Color.secondary)
                 }
 
-                Text("Detection is not finished. The target is one false action per hour and "
-                     + "no setting reaches it for single knocks. Double-knock bindings are the "
-                     + "safe ones today.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                GroupBox {
+                    ProfileSection(state: state)
+                        .padding(.horizontal, 4)
+                }
+
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Picker("", selection: Binding(
+                            get: { state.sensitivity },
+                            set: { state.sensitivity = $0 })) {
+                            ForEach(Sensitivity.allCases, id: \.self) {
+                                Text($0.label).tag($0)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(maxWidth: 340)
+                        Text(state.sensitivity.summary)
+                            .font(.system(size: 10)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Measured over ten minutes of ordinary use on two desks — typing, "
+                             + "trackpad, moving the laptop, setting a cup down.")
+                            .font(.system(size: 10)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 4)
+                } label: {
+                    Label("Detection", systemImage: "waveform.path.ecg")
+                        .font(.headline)
+                }
+
+                GroupBox {
+                    CalibrationSection(state: state)
+                        .padding(.horizontal, 4)
+                } label: {
+                    Label("Calibration", systemImage: "scope")
+                        .font(.headline)
+                }
+
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Allow unsafe single-knock actions", isOn: Binding(
+                            get: { bindings.allowSingleKnockActions },
+                            set: { bindings.setAllowSingleKnockActions($0) }))
+                            .toggleStyle(.switch)
+                        Text(bindings.allowSingleKnockActions
+                             ? "Single-knock actions are active. Ordinary desk use may trigger them."
+                             : "Single-knock actions are inactive. Use double or triple knocks for actions.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(bindings.allowSingleKnockActions
+                                             ? Color.orange : Color.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        ForEach(Bindings.allGestures, id: \.self) { g in
+                            Divider()
+                            BindingRow(gesture: g, bindings: bindings,
+                                       state_singleRate: state.sensitivity == .cautious ? 12
+                                                         : state.sensitivity == .balanced ? 42 : 220)
+                                .disabled(g.count == 1 && !bindings.allowSingleKnockActions)
+                                .opacity(g.count == 1 && !bindings.allowSingleKnockActions ? 0.55 : 1)
+                        }
+
+                        Text("Target: no more than one false action per hour. No measured "
+                             + "single-knock setting reaches it; calibrated double knocks are "
+                             + "the recommended action gesture.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 4)
+                } label: {
+                    Label("Actions", systemImage: "bolt.fill")
+                        .font(.headline)
+                }
             }
-            .padding(16)
+            .padding(20)
         }
-        .frame(width: 460, height: 520)
+        .frame(width: 560, height: 680)
     }
 }
 
@@ -589,7 +623,7 @@ final class SettingsWindow {
             return
         }
         let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 520),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 680),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered, defer: false)
         w.title = "InvisiButton Settings"

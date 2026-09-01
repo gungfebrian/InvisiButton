@@ -712,9 +712,28 @@ final class AppState: ObservableObject {
 struct MenuView: View {
     @ObservedObject var state: AppState
 
+    private var activeGestures: [Gesture] {
+        Bindings.allGestures.filter { state.bindings.action(for: $0) != .none }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("InvisiButton").bold()
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("InvisiButton").font(.headline)
+                    Text("Local desk-knock controls")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Label(state.running ? "Listening" : "Stopped",
+                      systemImage: state.running ? "waveform.circle.fill" : "pause.circle")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(state.running ? Color.green : Color.secondary)
+            }
 
             if !state.support.isUsable {
                 // T-030: refuse specifically, naming what is missing.
@@ -729,14 +748,13 @@ struct MenuView: View {
                 running
             }
         }
-        .padding(10)
-        .frame(width: 340)
+        .padding(14)
+        .frame(width: 360)
     }
 
     @ViewBuilder
     private var running: some View {
         Group {
-            Text(state.running ? "Listening" : "Stopped")
             Text("knocks detected: \(state.knockCount)   last pattern: \(state.lastPattern)")
                 .font(.system(size: 11, design: .monospaced))
             Text(state.lastRejection.isEmpty
@@ -775,17 +793,30 @@ struct MenuView: View {
 
             Divider()
             HStack {
-                Text("Bindings").font(.system(size: 11)).bold()
+                Label("Actions", systemImage: "bolt.fill")
+                    .font(.system(size: 11, weight: .semibold))
                 Spacer()
                 Button("Configure…") { SettingsWindow.show(state: state) }
                     .font(.system(size: 11))
             }
-            ForEach(Bindings.allGestures.filter {
-                        state.bindings.action(for: $0) != .none
-                     }.prefix(8), id: \.self) { g in
+            if activeGestures.isEmpty {
+                Text("No actions configured. Add a double-knock action to get started.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(activeGestures.prefix(8), id: \.self) { g in
                 Text("\(g.describe): \(state.bindings.action(for: g).describe)")
                     .font(.system(size: 10, design: .monospaced))
             }
+            Label(state.bindings.allowSingleKnockActions
+                  ? "Single-knock actions enabled"
+                  : "Safe mode · single-knock actions blocked",
+                  systemImage: state.bindings.allowSingleKnockActions
+                    ? "exclamationmark.triangle.fill" : "checkmark.shield.fill")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(state.bindings.allowSingleKnockActions
+                                 ? Color.orange : Color.secondary)
             if let m = state.direction.model {
                 Text(String(format: "direction: calibrated, %.0f%% held-out",
                             m.trainingAccuracy * 100))
@@ -793,6 +824,11 @@ struct MenuView: View {
             } else {
                 Text("direction: not calibrated").font(.system(size: 10, design: .monospaced))
             }
+            Text(state.rhythmStore.rhythm == nil
+                 ? "rhythm: not calibrated — configure before relying on double knocks"
+                 : "rhythm: calibrated for this desk")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(state.rhythmStore.rhythm == nil ? Color.orange : Color.secondary)
 
             Divider()
             Text("Log").font(.system(size: 11)).bold()
