@@ -17,3 +17,10 @@ swiftc -parse-as-library \
     "$root/tests/test_bindings.swift" \
     -o "$test_build/binding-tests"
 "$test_build/binding-tests"
+
+swiftc -parse-as-library \
+    "$root/app/InvisiButton/Sources/DirectionModel.swift" \
+    "$root/app/InvisiButton/Sources/Profiles.swift" \
+    "$root/tests/test_profile_calibration.swift" \
+    -o "$test_build/profile-calibration-tests"
+"$test_build/profile-calibration-tests"

@@ -79,6 +79,16 @@ struct Profile: Codable, Identifiable {
         }
         return bits.joined(separator: " · ")
     }
+
+    mutating func forgetDirectionCalibration() {
+        direction = nil
+        calibration = nil
+    }
+
+    mutating func forgetRhythmCalibration() {
+        rhythm = nil
+        rhythmGapsMS = nil
+    }
 }
 
 @MainActor

@@ -339,10 +339,7 @@ struct CalibrationSection: View {
                         .font(.system(size: 10)).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Button("Forget") {
-                    state.direction.clear()
-                    directionAvailable = false
-                }
+                Button("Forget") { state.forgetDirectionCalibration() }
                 } else {
                     if let v = state.direction.staleVersion {
                         Text("Your saved calibration (v\(v)) was made before a fix to how the "
@@ -377,7 +374,7 @@ struct CalibrationSection: View {
                         Button("Add more pairs") { state.improveRhythmCalibration() }
                             .disabled(state.profiles.active?.rhythmGapsMS == nil)
                         Button("Start over") { state.beginRhythmCalibration() }
-                        Button("Forget") { state.rhythmStore.clear() }
+                        Button("Forget") { state.forgetRhythmCalibration() }
                     }
 
                     // Pairs the window turned away are the evidence for widening

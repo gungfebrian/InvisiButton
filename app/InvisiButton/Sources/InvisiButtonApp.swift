@@ -388,6 +388,25 @@ final class AppState: ObservableObject {
         pendingCalibration = nil
     }
 
+    func forgetDirectionCalibration() {
+        profiles.update { $0.forgetDirectionCalibration() }
+        direction.clear()
+        directionAvailable = false
+        pendingCalibration = nil
+        verifyResult = nil
+        applySensitivity()
+        note("direction calibration forgotten for this desk")
+    }
+
+    func forgetRhythmCalibration() {
+        profiles.update { $0.forgetRhythmCalibration() }
+        rhythmStore.clear()
+        assembler.rhythm = nil
+        rejectedGapsMS = []
+        applySensitivity()
+        note("rhythm calibration forgotten for this desk")
+    }
+
     // ── Verify (returning to a desk) ────────────────────────────────────────
     @Published var verifying = false {
         didSet { let v = verifying; verifyingFlag.withLock { $0 = v } }
