@@ -12,3 +12,4 @@ spu-eventsystem*
 
 # Project docs (local only)
 *.md
+!README.md
